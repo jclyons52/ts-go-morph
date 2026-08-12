@@ -148,7 +148,14 @@ func (p *Project) getProgram() *compiler.Program {
 	if p.config != nil {
 		config.ConfigFile = p.config.ConfigFile
 	}
-	p.program = compiler.NewProgram(compiler.ProgramOptions{Config: config, Host: p.host})
+	// SingleThreaded gives a single-checker pool, so all Type values handed
+	// out by this project come from the same checker (types from different
+	// checkers must not be mixed).
+	p.program = compiler.NewProgram(compiler.ProgramOptions{
+		Config:         config,
+		Host:           p.host,
+		SingleThreaded: core.TSTrue,
+	})
 	p.program.BindSourceFiles()
 	return p.program
 }
