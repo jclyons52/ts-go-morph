@@ -1,6 +1,8 @@
 package tsmorph
 
 import (
+	"fmt"
+
 	"github.com/jclyons52/ts-go-morph/third_party/typescript-go/ts/ast"
 	"github.com/jclyons52/ts-go-morph/third_party/typescript-go/ts/scanner"
 	"github.com/jclyons52/ts-go-morph/third_party/typescript-go/ts/tspath"
@@ -45,4 +47,22 @@ func (s *SourceFile) Text() string { return s.astFile().Text() }
 func (s *SourceFile) LineAndColumn(pos int) (line, column int) {
 	l, off := scanner.GetECMALineAndByteOffsetOfPosition(s.astFile(), pos)
 	return l + 1, off + 1
+}
+
+// IsSaved reports whether the file has no unsaved changes.
+func (s *SourceFile) IsSaved() bool {
+	return !s.project.fsys.hasOverlay(s.path)
+}
+
+// Save writes the file's current text to disk if it has unsaved changes.
+// It is a no-op for in-memory projects.
+func (s *SourceFile) Save() error {
+	if s.project.opts.UseInMemoryFileSystem {
+		return nil
+	}
+	if _, err := s.project.fsys.flushFile(s.path); err != nil {
+		return fmt.Errorf("tsmorph: save %s: %w", s.path, err)
+	}
+	s.project.invalidate()
+	return nil
 }
