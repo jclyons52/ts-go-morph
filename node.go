@@ -12,22 +12,37 @@ type Kind = ast.Kind
 
 // Commonly used kinds, re-exported for convenience.
 const (
-	KindClassDeclaration     = ast.KindClassDeclaration
-	KindInterfaceDeclaration = ast.KindInterfaceDeclaration
-	KindFunctionDeclaration  = ast.KindFunctionDeclaration
-	KindMethodDeclaration    = ast.KindMethodDeclaration
-	KindPropertyDeclaration  = ast.KindPropertyDeclaration
-	KindConstructor          = ast.KindConstructor
-	KindParameter            = ast.KindParameter
-	KindEnumDeclaration      = ast.KindEnumDeclaration
-	KindEnumMember           = ast.KindEnumMember
-	KindTypeAliasDeclaration = ast.KindTypeAliasDeclaration
-	KindVariableStatement    = ast.KindVariableStatement
-	KindVariableDeclaration  = ast.KindVariableDeclaration
-	KindImportDeclaration    = ast.KindImportDeclaration
-	KindExportDeclaration    = ast.KindExportDeclaration
-	KindExportAssignment     = ast.KindExportAssignment
-	KindIdentifier           = ast.KindIdentifier
+	KindClassDeclaration              = ast.KindClassDeclaration
+	KindInterfaceDeclaration          = ast.KindInterfaceDeclaration
+	KindFunctionDeclaration           = ast.KindFunctionDeclaration
+	KindMethodDeclaration             = ast.KindMethodDeclaration
+	KindPropertyDeclaration           = ast.KindPropertyDeclaration
+	KindConstructor                   = ast.KindConstructor
+	KindParameter                     = ast.KindParameter
+	KindEnumDeclaration               = ast.KindEnumDeclaration
+	KindEnumMember                    = ast.KindEnumMember
+	KindTypeAliasDeclaration          = ast.KindTypeAliasDeclaration
+	KindVariableStatement             = ast.KindVariableStatement
+	KindVariableDeclaration           = ast.KindVariableDeclaration
+	KindImportDeclaration             = ast.KindImportDeclaration
+	KindExportDeclaration             = ast.KindExportDeclaration
+	KindExportAssignment              = ast.KindExportAssignment
+	KindIdentifier                    = ast.KindIdentifier
+	KindStringLiteral                 = ast.KindStringLiteral
+	KindNoSubstitutionTemplateLiteral = ast.KindNoSubstitutionTemplateLiteral
+	KindCallExpression                = ast.KindCallExpression
+	KindPropertyAccessExpression      = ast.KindPropertyAccessExpression
+	KindArrowFunction                 = ast.KindArrowFunction
+	KindFunctionExpression            = ast.KindFunctionExpression
+	KindBlock                         = ast.KindBlock
+	KindPropertySignature             = ast.KindPropertySignature
+	KindObjectBindingPattern          = ast.KindObjectBindingPattern
+	KindJsxText                       = ast.KindJsxText
+	KindJsxAttribute                  = ast.KindJsxAttribute
+	KindJsxElement                    = ast.KindJsxElement
+	KindJsxSelfClosingElement         = ast.KindJsxSelfClosingElement
+	KindJsxFragment                   = ast.KindJsxFragment
+	KindJsxExpression                 = ast.KindJsxExpression
 )
 
 // Node wraps a TypeScript AST node. It is a thin, comparable value type;
@@ -65,6 +80,9 @@ func (n Node) derive(astNode *ast.Node) (Node, bool) {
 func (n Node) IsForgotten() bool {
 	return n.sf == nil || n.gen != n.sf.generation()
 }
+
+// IsZero reports whether the node is the zero value (no underlying AST node).
+func (n Node) IsZero() bool { return n.node == nil }
 
 // check panics if the node is forgotten.
 func (n Node) check() {
@@ -231,6 +249,26 @@ func (n Node) IsDefaultExport() bool {
 	return n.hasModifiers(ast.ModifierFlagsDefault)
 }
 
+// HasModifier reports whether the node has the given syntactic modifier
+// flags (any of them set). Use the ModifierFlags* constants in the vendored
+// ast package (e.g. ast.ModifierFlagsPrivate).
+func (n Node) HasModifier(flags ast.ModifierFlags) bool {
+	n.check()
+	return n.hasModifiers(flags)
+}
+
+// HasModifierPrivate reports whether the node has a `private` modifier.
+func (n Node) HasModifierPrivate() bool { return n.hasModifiers(ast.ModifierFlagsPrivate) }
+
+// HasModifierProtected reports whether the node has a `protected` modifier.
+func (n Node) HasModifierProtected() bool { return n.hasModifiers(ast.ModifierFlagsProtected) }
+
+// HasModifierStatic reports whether the node has a `static` modifier.
+func (n Node) HasModifierStatic() bool { return n.hasModifiers(ast.ModifierFlagsStatic) }
+
+// IsAbstract reports whether the node has an `abstract` modifier.
+func (n Node) IsAbstract() bool { return n.hasModifiers(ast.ModifierFlagsAbstract) }
+
 // --- Kind predicates ---
 
 func (n Node) IsClassDeclaration() bool     { return ast.IsClassDeclaration(n.node) }
@@ -332,6 +370,246 @@ func (n Node) AsExportDeclaration() (ExportDeclaration, bool) {
 		return ExportDeclaration{}, false
 	}
 	return ExportDeclaration{Node: n}, true
+}
+
+// --- Generic expression / statement / JSX accessors ---
+//
+// These narrow the constructor to arbitrary expression and statement kinds
+// (beyond the declaration subset wrapped above). They are thin wrappers
+// around the compiler's accessors; the returned Node is a sibling wrapper in
+// the same generation.
+
+// IsCallExpression reports whether the node is a call expression.
+func (n Node) IsCallExpression() bool { return ast.IsCallExpression(n.node) }
+
+// IsPropertyAccessExpression reports whether the node is a property access
+// (`a.b`).
+func (n Node) IsPropertyAccessExpression() bool {
+	return n.node.Kind == ast.KindPropertyAccessExpression
+}
+
+// IsIdentifier reports whether the node is an identifier.
+func (n Node) IsIdentifier() bool { return n.node.Kind == ast.KindIdentifier }
+
+// IsStringLiteral reports whether the node is a string literal.
+func (n Node) IsStringLiteral() bool { return n.node.Kind == ast.KindStringLiteral }
+
+// IsArrowFunction reports whether the node is an arrow function.
+func (n Node) IsArrowFunction() bool { return n.node.Kind == ast.KindArrowFunction }
+
+// IsBlock reports whether the node is a statement block (`{ ... }`).
+func (n Node) IsBlock() bool { return n.node.Kind == ast.KindBlock }
+
+// IsFunctionLike reports whether the node is a function-like declaration or
+// expression (function, method, constructor, arrow, etc.).
+func (n Node) IsFunctionLike() bool { return ast.IsFunctionLike(n.node) }
+
+// IsVariableDeclaration reports whether the node is a variable declaration.
+func (n Node) IsVariableDeclaration() bool { return n.node.Kind == ast.KindVariableDeclaration }
+
+// IsObjectBindingPattern reports whether the node is an object binding
+// pattern (`{ a, b }` in a destructuring parameter).
+func (n Node) IsObjectBindingPattern() bool {
+	return n.node.Kind == ast.KindObjectBindingPattern
+}
+
+// IsJsxText reports whether the node is JSX text content.
+func (n Node) IsJsxText() bool { return n.node.Kind == ast.KindJsxText }
+
+// IsJsxAttribute reports whether the node is a JSX attribute.
+func (n Node) IsJsxAttribute() bool { return n.node.Kind == ast.KindJsxAttribute }
+
+// IsJsxElement reports whether the node is a JSX element (opening+closing).
+func (n Node) IsJsxElement() bool { return n.node.Kind == ast.KindJsxElement }
+
+// IsJsxSelfClosingElement reports whether the node is a self-closing JSX
+// element (`<Foo/>`).
+func (n Node) IsJsxSelfClosingElement() bool { return n.node.Kind == ast.KindJsxSelfClosingElement }
+
+// IsJsxExpression reports whether the node is a JSX expression (`{ ... }`).
+func (n Node) IsJsxExpression() bool { return n.node.Kind == ast.KindJsxExpression }
+
+// IsJsxFragment reports whether the node is a JSX fragment (`<>...</>`).
+func (n Node) IsJsxFragment() bool { return n.node.Kind == ast.KindJsxFragment }
+
+// AsCallExpression downcasts the node, or returns false.
+func (n Node) AsCallExpression() (CallExpression, bool) {
+	n.check()
+	if !n.IsCallExpression() {
+		return CallExpression{}, false
+	}
+	return CallExpression{Node: n}, true
+}
+
+// AsPropertyAccessExpression downcasts the node, or returns false.
+func (n Node) AsPropertyAccessExpression() (PropertyAccessExpression, bool) {
+	n.check()
+	if !n.IsPropertyAccessExpression() {
+		return PropertyAccessExpression{}, false
+	}
+	return PropertyAccessExpression{Node: n}, true
+}
+
+// AsIdentifier downcasts the node, or returns false.
+func (n Node) AsIdentifier() (Identifier, bool) {
+	n.check()
+	if !n.IsIdentifier() {
+		return Identifier{}, false
+	}
+	return Identifier{Node: n}, true
+}
+
+// AsStringLiteral downcasts the node, or returns false.
+func (n Node) AsStringLiteral() (StringLiteral, bool) {
+	n.check()
+	if !n.IsStringLiteral() {
+		return StringLiteral{}, false
+	}
+	return StringLiteral{Node: n}, true
+}
+
+// AsArrowFunction downcasts the node, or returns false.
+func (n Node) AsArrowFunction() (ArrowFunction, bool) {
+	n.check()
+	if !n.IsArrowFunction() {
+		return ArrowFunction{}, false
+	}
+	return ArrowFunction{Node: n}, true
+}
+
+// AsBlock downcasts the node, or returns false.
+func (n Node) AsBlock() (Block, bool) {
+	n.check()
+	if !n.IsBlock() {
+		return Block{}, false
+	}
+	return Block{Node: n}, true
+}
+
+// AsVariableDeclaration downcasts the node, or returns false.
+func (n Node) AsVariableDeclaration() (VariableDeclaration, bool) {
+	n.check()
+	if !n.IsVariableDeclaration() {
+		return VariableDeclaration{}, false
+	}
+	return VariableDeclaration{Node: n}, true
+}
+
+// AsJsxAttribute downcasts the node, or returns false.
+func (n Node) AsJsxAttribute() (JsxAttribute, bool) {
+	n.check()
+	if !n.IsJsxAttribute() {
+		return JsxAttribute{}, false
+	}
+	return JsxAttribute{Node: n}, true
+}
+
+// AsJsxElement downcasts the node, or returns false.
+func (n Node) AsJsxElement() (JsxElement, bool) {
+	n.check()
+	if !n.IsJsxElement() {
+		return JsxElement{}, false
+	}
+	return JsxElement{Node: n}, true
+}
+
+// AsJsxText downcasts the node, or returns false.
+func (n Node) AsJsxText() (JsxText, bool) {
+	n.check()
+	if !n.IsJsxText() {
+		return JsxText{}, false
+	}
+	return JsxText{Node: n}, true
+}
+
+// LiteralValue returns the unquoted text of a string literal or no-substitution
+// template literal, or "" if the node is not such a literal.
+func (n Node) LiteralValue() string {
+	n.check()
+	if n.IsStringLiteral() {
+		return n.node.AsStringLiteral().Text
+	}
+	if n.node.Kind == ast.KindNoSubstitutionTemplateLiteral {
+		return n.node.Text()
+	}
+	return ""
+}
+
+// GetExpression returns the object expression of a call, property access, or
+// JSX expression node, or returns false. For a call `f(a)`, this is `f`.
+func (n Node) GetExpression() (Node, bool) {
+	n.check()
+	if expr := n.node.Expression(); expr != nil {
+		return n.derive(expr)
+	}
+	return Node{}, false
+}
+
+// GetArguments returns the arguments of a call expression, or nil.
+func (n Node) GetArguments() []Node {
+	n.check()
+	var out []Node
+	for _, a := range n.node.Arguments() {
+		if w, ok := n.derive(a); ok {
+			out = append(out, w)
+		}
+	}
+	return out
+}
+
+// GetNameNode returns the name node (for attributes, property access, etc.),
+// or false.
+func (n Node) GetNameNode() (Node, bool) {
+	n.check()
+	if name := n.node.Name(); name != nil {
+		return n.derive(name)
+	}
+	return Node{}, false
+}
+
+// GetInitializer returns the initializer of the node, or false.
+func (n Node) GetInitializer() (Node, bool) {
+	n.check()
+	if init := n.node.Initializer(); init != nil {
+		return n.derive(init)
+	}
+	return Node{}, false
+}
+
+// GetBody returns the body (block or expression) of a function-like node, or
+// false.
+func (n Node) GetBody() (Node, bool) {
+	n.check()
+	if body := n.node.Body(); body != nil {
+		return n.derive(body)
+	}
+	return Node{}, false
+}
+
+// GetStatements returns the statements of a block or source file, or nil.
+func (n Node) GetStatements() []Node {
+	n.check()
+	var out []Node
+	for _, s := range n.node.Statements() {
+		if w, ok := n.derive(s); ok {
+			out = append(out, w)
+		}
+	}
+	return out
+}
+
+// GetJsxChildren returns the children of a JSX element or fragment, or nil.
+func (n Node) GetJsxChildren() []Node {
+	n.check()
+	var out []Node
+	if children := n.node.Children(); children != nil {
+		for _, c := range children.Nodes {
+			if w, ok := n.derive(c); ok {
+				out = append(out, w)
+			}
+		}
+	}
+	return out
 }
 
 // lineOf returns the 0-based line of a byte offset within the file.

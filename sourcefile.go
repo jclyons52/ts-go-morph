@@ -39,6 +39,10 @@ func (s *SourceFile) FilePath() string { return s.path }
 // BaseName returns the file name without its directory, e.g. "index.ts".
 func (s *SourceFile) BaseName() string { return tspathGetBaseName(s.path) }
 
+// IsLibFile reports whether this source file is a bundled library declaration
+// (lib.*.d.ts), e.g. for built-in types like `Error` or `Date`.
+func (s *SourceFile) IsLibFile() bool { return isLibFile(s.path) }
+
 // Text returns the full text of the file, including unsaved changes.
 func (s *SourceFile) Text() string { return s.astFile().Text() }
 

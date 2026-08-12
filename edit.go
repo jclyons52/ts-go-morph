@@ -39,6 +39,25 @@ func (s *SourceFile) insertStatementText(index int, text string) {
 	s.applyEdits([]textEdit{{start: pos, end: pos, newText: text + nl + nl}})
 }
 
+// TextEdit describes the replacement of the byte range [Start, End) with
+// NewText. Ranges are byte offsets into the file's current text.
+type TextEdit struct {
+	Start, End int
+	NewText    string
+}
+
+// ApplyTextEdits applies multiple non-overlapping text edits to the file in a
+// single pass, re-parsing the file once. Edits are applied in descending
+// position order so offsets remain valid. All existing Node wrappers for the
+// file are forgotten.
+func (s *SourceFile) ApplyTextEdits(edits []TextEdit) {
+	te := make([]textEdit, len(edits))
+	for i, e := range edits {
+		te[i] = textEdit{start: e.Start, end: e.End, newText: e.NewText}
+	}
+	s.applyEdits(te)
+}
+
 // InsertClass inserts a class declaration at the given statement index.
 func (s *SourceFile) InsertClass(index int, structure ClassStructure) ClassDeclaration {
 	s.insertStatementText(index, newCodeWriter(s.project).classDecl(structure))
@@ -539,4 +558,57 @@ func (n Node) Rename(newName string) {
 		panic("tsmorph: node of kind " + n.KindName() + " has no name to rename")
 	}
 	n.sf.replaceRange(name.Start(), name.End(), newName)
+}
+
+// InsertStatementsInto inserts one or more statement lines at the given index
+// within the node's statement block (the node must be a Block). Index 0
+// inserts at the start of the block; an index >= the statement count appends
+// before the closing brace. Each statement is rendered on its own line with
+// indentation from the project's ManipulationSettings.
+func (n Node) InsertStatementsInto(index int, statements ...string) {
+	n.check()
+	if len(statements) == 0 {
+		return
+	}
+	nl := string(n.sf.project.ManipulationSettings().NewLineKind)
+	inner := n.memberIndent()
+
+	render := func() string {
+		var sb strings.Builder
+		for i, s := range statements {
+			if i > 0 {
+				sb.WriteString(nl)
+			}
+			sb.WriteString(inner)
+			sb.WriteString(s)
+		}
+		return sb.String()
+	}
+
+	stmts := n.node.Statements()
+	if len(stmts) == 0 {
+		open := n.openBracePos()
+		if open < 0 {
+			panic("tsmorph: could not find opening brace of " + n.KindName())
+		}
+		n.sf.applyEdits([]textEdit{{start: open, end: open, newText: nl + render() + nl + n.baseIndent()}})
+		return
+	}
+
+	if index < len(stmts) {
+		stmt := Node{node: stmts[index], sf: n.sf, gen: n.gen}
+		n.sf.applyEdits([]textEdit{{start: stmt.Start(), end: stmt.Start(), newText: render() + nl}})
+		return
+	}
+
+	// Append: insert just before the closing brace.
+	text := n.sf.Text()
+	if rel := strings.LastIndex(text[n.Start():n.End()], "}"); rel >= 0 {
+		pos := n.Start() + rel
+		n.sf.applyEdits([]textEdit{{start: pos, end: pos, newText: nl + render()}})
+		return
+	}
+
+	last := Node{node: stmts[len(stmts)-1], sf: n.sf, gen: n.gen}
+	n.sf.applyEdits([]textEdit{{start: last.End(), end: last.End(), newText: nl + render()}})
 }

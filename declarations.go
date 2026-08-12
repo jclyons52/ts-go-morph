@@ -2,6 +2,7 @@ package tsmorph
 
 import (
 	"github.com/jclyons52/ts-go-morph/third_party/typescript-go/ts/ast"
+	"github.com/jclyons52/ts-go-morph/third_party/typescript-go/ts/checker"
 )
 
 // Typed node wrappers. Each embeds Node and adds kind-specific accessors.
@@ -157,6 +158,54 @@ func (p PropertyDeclaration) Initializer() (Node, bool) {
 	return p.sf.wrap(p.node.Initializer())
 }
 
+// IsAbstract reports whether the class has an `abstract` modifier.
+func (c ClassDeclaration) IsAbstract() bool { return c.hasModifiers(ast.ModifierFlagsAbstract) }
+
+// GetConstructors returns the class's constructor declarations.
+func (c ClassDeclaration) GetConstructors() []ConstructorDeclaration {
+	var out []ConstructorDeclaration
+	for _, m := range c.node.Members() {
+		if m.Kind == ast.KindConstructor {
+			out = append(out, ConstructorDeclaration{Node{node: m, sf: c.sf, gen: c.gen}})
+		}
+	}
+	return out
+}
+
+// GetStaticMethods returns the class's static method declarations.
+func (c ClassDeclaration) GetStaticMethods() []MethodDeclaration {
+	var out []MethodDeclaration
+	for _, m := range c.node.Members() {
+		if m.Kind == ast.KindMethodDeclaration && m.ModifierFlags()&ast.ModifierFlagsStatic != 0 {
+			out = append(out, MethodDeclaration{Node{node: m, sf: c.sf, gen: c.gen}})
+		}
+	}
+	return out
+}
+
+// GetStaticMethod returns the class's static method with the given name, or
+// false.
+func (c ClassDeclaration) GetStaticMethod(name string) (MethodDeclaration, bool) {
+	for _, m := range c.GetStaticMethods() {
+		if m.Name() == name {
+			return m, true
+		}
+	}
+	return MethodDeclaration{}, false
+}
+
+// ReturnType returns the return type of the method (declared or inferred).
+func (m MethodDeclaration) ReturnType() Type {
+	return withCheckerT(m.sf.project, func(c *checker.Checker) Type {
+		typ := c.GetTypeAtLocation(m.node)
+		sigs := c.GetCallSignatures(typ)
+		if len(sigs) == 0 {
+			return Type{}
+		}
+		return Type{t: c.GetReturnTypeOfSignature(sigs[0]), project: m.sf.project}
+	})
+}
+
 // ParameterDeclaration wraps a function/method/constructor parameter.
 type ParameterDeclaration struct{ Node }
 
@@ -168,6 +217,23 @@ func (p ParameterDeclaration) TypeNode() (Node, bool) {
 // IsOptional reports whether the parameter has a `?`.
 func (p ParameterDeclaration) IsOptional() bool {
 	return p.node.QuestionToken() != nil
+}
+
+// HasInitializer reports whether the parameter has a default value.
+func (p ParameterDeclaration) HasInitializer() bool {
+	return p.node.Initializer() != nil
+}
+
+// GetInitializer returns the parameter's initializer expression, or false.
+func (p ParameterDeclaration) GetInitializer() (Node, bool) {
+	return p.sf.wrap(p.node.Initializer())
+}
+
+// IsDestructured reports whether the parameter binds via an object binding
+// pattern (`{ a, b }`).
+func (p ParameterDeclaration) IsDestructured() bool {
+	name := p.node.Name()
+	return name != nil && name.Kind == ast.KindObjectBindingPattern
 }
 
 // parameterNodes extracts wrapped parameters from a function-like node.

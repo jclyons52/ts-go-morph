@@ -129,6 +129,16 @@ func (s *SourceFile) VariableStatements() []VariableStatement {
 	return out
 }
 
+// VariableDeclarations returns all variable declarations across the file's
+// top-level variable statements.
+func (s *SourceFile) VariableDeclarations() []VariableDeclaration {
+	var out []VariableDeclaration
+	for _, vs := range s.VariableStatements() {
+		out = append(out, vs.Declarations()...)
+	}
+	return out
+}
+
 // ImportDeclarations returns the file's import declarations.
 func (s *SourceFile) ImportDeclarations() []ImportDeclaration {
 	var out []ImportDeclaration

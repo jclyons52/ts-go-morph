@@ -116,6 +116,8 @@ type ImportDeclarationStructure struct {
 	DefaultImport   string   // optional
 	NamespaceImport string   // optional; e.g. "ns" for `import * as ns`
 	NamedImports    []string // optional
+	// IsTypeOnly renders `import type { ... } from "..."`.
+	IsTypeOnly bool
 }
 
 // ExportDeclarationStructure describes an `export ... from` declaration.
@@ -376,6 +378,9 @@ func (w *codeWriter) variableStatement(v VariableStatementStructure) string {
 
 func (w *codeWriter) importDecl(i ImportDeclarationStructure) string {
 	w.write("import ")
+	if i.IsTypeOnly {
+		w.write("type ")
+	}
 	var parts []string
 	if i.DefaultImport != "" {
 		parts = append(parts, i.DefaultImport)
