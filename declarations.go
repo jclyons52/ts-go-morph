@@ -15,7 +15,7 @@ func (c ClassDeclaration) Methods() []MethodDeclaration {
 	var out []MethodDeclaration
 	for _, m := range c.node.Members() {
 		if m.Kind == ast.KindMethodDeclaration {
-			out = append(out, MethodDeclaration{Node{node: m, sf: c.sf}})
+			out = append(out, MethodDeclaration{Node{node: m, sf: c.sf, gen: c.gen}})
 		}
 	}
 	return out
@@ -26,7 +26,7 @@ func (c ClassDeclaration) Properties() []PropertyDeclaration {
 	var out []PropertyDeclaration
 	for _, m := range c.node.Members() {
 		if m.Kind == ast.KindPropertyDeclaration {
-			out = append(out, PropertyDeclaration{Node{node: m, sf: c.sf}})
+			out = append(out, PropertyDeclaration{Node{node: m, sf: c.sf, gen: c.gen}})
 		}
 	}
 	return out
@@ -37,7 +37,7 @@ func (c ClassDeclaration) Constructors() []Node {
 	var out []Node
 	for _, m := range c.node.Members() {
 		if m.Kind == ast.KindConstructor {
-			out = append(out, Node{node: m, sf: c.sf})
+			out = append(out, Node{node: m, sf: c.sf, gen: c.gen})
 		}
 	}
 	return out
@@ -57,7 +57,7 @@ func (n Node) heritageTypes(token Kind) []string {
 			continue
 		}
 		for _, t := range hc.Types.Nodes {
-			out = append(out, Node{node: t, sf: n.sf}.Text())
+			out = append(out, Node{node: t, sf: n.sf, gen: n.gen}.Text())
 		}
 	}
 	return out
@@ -83,7 +83,7 @@ type InterfaceDeclaration struct{ Node }
 func (i InterfaceDeclaration) Members() []Node {
 	var out []Node
 	for _, m := range i.node.Members() {
-		out = append(out, Node{node: m, sf: i.sf})
+		out = append(out, Node{node: m, sf: i.sf, gen: i.gen})
 	}
 	return out
 }
@@ -97,7 +97,7 @@ func (i InterfaceDeclaration) Extends() []string {
 	var out []string
 	for _, clause := range data.HeritageClauses.Nodes {
 		for _, t := range clause.AsHeritageClause().Types.Nodes {
-			out = append(out, Node{node: t, sf: i.sf}.Text())
+			out = append(out, Node{node: t, sf: i.sf, gen: i.gen}.Text())
 		}
 	}
 	return out
@@ -121,6 +121,14 @@ func (f FunctionDeclaration) ReturnTypeNode() (Node, bool) {
 // body (overloads, ambient declarations).
 func (f FunctionDeclaration) Body() (Node, bool) {
 	return f.sf.wrap(f.node.Body())
+}
+
+// ConstructorDeclaration wraps a class constructor.
+type ConstructorDeclaration struct{ Node }
+
+// Parameters returns the constructor's parameters.
+func (c ConstructorDeclaration) Parameters() []ParameterDeclaration {
+	return parameterNodes(c.Node)
 }
 
 // MethodDeclaration wraps a class or object method.
@@ -166,7 +174,7 @@ func (p ParameterDeclaration) IsOptional() bool {
 func parameterNodes(n Node) []ParameterDeclaration {
 	var out []ParameterDeclaration
 	for _, p := range n.node.Parameters() {
-		out = append(out, ParameterDeclaration{Node{node: p, sf: n.sf}})
+		out = append(out, ParameterDeclaration{Node{node: p, sf: n.sf, gen: n.gen}})
 	}
 	return out
 }
@@ -186,7 +194,7 @@ func (e EnumMember) Initializer() (Node, bool) {
 func (e EnumDeclaration) Members() []EnumMember {
 	var out []EnumMember
 	for _, m := range e.node.AsEnumDeclaration().Members.Nodes {
-		out = append(out, EnumMember{Node{node: m, sf: e.sf}})
+		out = append(out, EnumMember{Node{node: m, sf: e.sf, gen: e.gen}})
 	}
 	return out
 }
@@ -210,7 +218,7 @@ func (v VariableStatement) Declarations() []VariableDeclaration {
 		return nil
 	}
 	for _, d := range dl.AsVariableDeclarationList().Declarations.Nodes {
-		out = append(out, VariableDeclaration{Node{node: d, sf: v.sf}})
+		out = append(out, VariableDeclaration{Node{node: d, sf: v.sf, gen: v.gen}})
 	}
 	return out
 }

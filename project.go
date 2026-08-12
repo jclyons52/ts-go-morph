@@ -40,6 +40,9 @@ type ProjectOptions struct {
 	// system instead of the real one. Paths should be absolute, e.g.
 	// "/src/index.ts". Save() is a no-op in this mode.
 	UseInMemoryFileSystem bool
+
+	// ManipulationSettings controls how generated code is formatted.
+	ManipulationSettings ManipulationSettings
 }
 
 // Project is a collection of source files and the compiler state binding
@@ -58,6 +61,8 @@ type Project struct {
 
 	mu      sync.Mutex
 	program *compiler.Program // lazily built; nil when invalidated
+
+	gens map[string]int // canonical path -> generation (bumped on each edit)
 }
 
 // NewProject creates a Project from the given options.
@@ -168,6 +173,24 @@ func (p *Project) invalidate() {
 	p.program = nil
 }
 
+// generationOf returns the current generation for a canonical file path.
+func (p *Project) generationOf(canonicalPath string) int {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	return p.gens[canonicalPath]
+}
+
+// bumpGeneration increments the generation for a canonical file path,
+// forgetting all Node wrappers previously handed out for that file.
+func (p *Project) bumpGeneration(canonicalPath string) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	if p.gens == nil {
+		p.gens = map[string]int{}
+	}
+	p.gens[canonicalPath]++
+}
+
 // isLibFile reports whether fileName is a bundled lib.*.d.ts file.
 func isLibFile(fileName string) bool {
 	return bundled.IsBundled(fileName)
@@ -181,7 +204,7 @@ func (p *Project) SourceFiles() []*SourceFile {
 		if isLibFile(f.FileName()) {
 			continue
 		}
-		result = append(result, &SourceFile{project: p, file: f})
+		result = append(result, &SourceFile{project: p, path: f.FileName()})
 	}
 	return result
 }
@@ -192,7 +215,7 @@ func (p *Project) SourceFile(path string) *SourceFile {
 	abs := p.absPath(path)
 	key := tspath.ToPath(abs, p.cwd, p.fsys.UseCaseSensitiveFileNames())
 	if f, ok := p.getProgram().FilesByPath()[key]; ok && !isLibFile(f.FileName()) {
-		return &SourceFile{project: p, file: f}
+		return &SourceFile{project: p, path: f.FileName()}
 	}
 	return nil
 }

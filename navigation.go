@@ -8,14 +8,17 @@ import (
 
 // RootNode returns the file's root as a Node, enabling arbitrary traversal.
 func (s *SourceFile) RootNode() Node {
-	return Node{node: s.file.AsNode(), sf: s}
+	n, _ := s.wrap(s.astFile().AsNode())
+	return n
 }
 
 // Statements returns the top-level statements of the file.
 func (s *SourceFile) Statements() []Node {
 	var out []Node
-	for _, st := range s.file.Statements.Nodes {
-		out = append(out, Node{node: st, sf: s})
+	for _, st := range s.astFile().Statements.Nodes {
+		if n, ok := s.wrap(st); ok {
+			out = append(out, n)
+		}
 	}
 	return out
 }
@@ -23,10 +26,12 @@ func (s *SourceFile) Statements() []Node {
 // topLevel returns wrapped top-level statements of the given kinds.
 func (s *SourceFile) topLevel(kinds ...Kind) []Node {
 	var out []Node
-	for _, st := range s.file.Statements.Nodes {
+	for _, st := range s.astFile().Statements.Nodes {
 		for _, k := range kinds {
 			if st.Kind == k {
-				out = append(out, Node{node: st, sf: s})
+				if n, ok := s.wrap(st); ok {
+					out = append(out, n)
+				}
 				break
 			}
 		}

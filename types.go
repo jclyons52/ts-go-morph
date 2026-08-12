@@ -209,8 +209,10 @@ func (s Symbol) Declarations() []Node {
 		if file == nil {
 			continue
 		}
-		sf := &SourceFile{project: s.project, file: file}
-		out = append(out, Node{node: d, sf: sf})
+		sf := &SourceFile{project: s.project, path: file.FileName()}
+		if n, ok := sf.wrap(d); ok {
+			out = append(out, n)
+		}
 	}
 	return out
 }

@@ -32,48 +32,77 @@ const (
 
 // Node wraps a TypeScript AST node. It is a thin, comparable value type;
 // the zero value is not usable.
+//
+// A Node is only valid while its source file is unmodified: after any edit
+// to the file the node is forgotten (IsForgotten returns true) and calling
+// any of its methods panics, matching ts-morph's behaviour. Re-fetch nodes
+// from the SourceFile after edits.
 type Node struct {
 	node *ast.Node
 	sf   *SourceFile
+	gen  int
 }
 
-// wrap creates a Node for astNode, or returns nil-wrapped ok=false style.
+// wrap creates a Node for astNode, recording the file's current generation.
 // Returns (Node, false) when astNode is nil.
 func (s *SourceFile) wrap(astNode *ast.Node) (Node, bool) {
 	if astNode == nil {
 		return Node{}, false
 	}
-	return Node{node: astNode, sf: s}, true
+	return Node{node: astNode, sf: s, gen: s.generation()}, true
+}
+
+// derive creates a child Node from an existing one (same generation).
+func (n Node) derive(astNode *ast.Node) (Node, bool) {
+	if astNode == nil {
+		return Node{}, false
+	}
+	return Node{node: astNode, sf: n.sf, gen: n.gen}, true
+}
+
+// IsForgotten reports whether the node is stale because its source file was
+// modified after the node was obtained.
+func (n Node) IsForgotten() bool {
+	return n.sf == nil || n.gen != n.sf.generation()
+}
+
+// check panics if the node is forgotten.
+func (n Node) check() {
+	if n.IsForgotten() {
+		panic("tsmorph: attempt to use a forgotten node (the source file was modified after this node was obtained); re-fetch it from the SourceFile")
+	}
 }
 
 // ASTNode returns the underlying compiler AST node. Intended for advanced
 // use; the compiler packages are internal and may change between releases.
-func (n Node) ASTNode() *ast.Node { return n.node }
+func (n Node) ASTNode() *ast.Node { n.check(); return n.node }
 
 // SourceFile returns the source file containing this node.
 func (n Node) SourceFile() *SourceFile { return n.sf }
 
 // Kind returns the syntactic kind of the node.
-func (n Node) Kind() Kind { return n.node.Kind }
+func (n Node) Kind() Kind { n.check(); return n.node.Kind }
 
 // KindName returns the human-readable kind, e.g. "ClassDeclaration".
 func (n Node) KindName() string { return n.node.KindString() }
 
 // Pos returns the byte offset of the start of the node, including any
 // leading trivia (whitespace/comments).
-func (n Node) Pos() int { return n.node.Pos() }
+func (n Node) Pos() int { n.check(); return n.node.Pos() }
 
 // Start returns the byte offset of the first token of the node, skipping
 // leading trivia.
 func (n Node) Start() int {
+	n.check()
 	return scanner.SkipTrivia(n.sf.Text(), n.node.Pos())
 }
 
 // End returns the byte offset of the end of the node.
-func (n Node) End() int { return n.node.End() }
+func (n Node) End() int { n.check(); return n.node.End() }
 
 // Text returns the source text of the node, excluding surrounding trivia.
 func (n Node) Text() string {
+	n.check()
 	text := n.sf.Text()
 	start, end := n.Start(), n.node.End()
 	if start < 0 || end > len(text) || start > end {
@@ -88,24 +117,29 @@ func (n Node) StartLineAndColumn() (line, column int) {
 }
 
 // Parent returns the parent node, or false if this is the root.
-func (n Node) Parent() (Node, bool) { return n.sf.wrap(n.node.Parent) }
+func (n Node) Parent() (Node, bool) {
+	n.check()
+	return n.derive(n.node.Parent)
+}
 
 // Children returns the direct children of the node.
 func (n Node) Children() []Node {
+	n.check()
 	var out []Node
 	for c := range n.node.IterChildren() {
-		out = append(out, Node{node: c, sf: n.sf})
+		out = append(out, Node{node: c, sf: n.sf, gen: n.gen})
 	}
 	return out
 }
 
 // Descendants returns all descendants of the node in depth-first order.
 func (n Node) Descendants() []Node {
+	n.check()
 	var out []Node
 	var walk func(an *ast.Node)
 	walk = func(an *ast.Node) {
 		for c := range an.IterChildren() {
-			out = append(out, Node{node: c, sf: n.sf})
+			out = append(out, Node{node: c, sf: n.sf, gen: n.gen})
 			walk(c)
 		}
 	}
@@ -115,12 +149,13 @@ func (n Node) Descendants() []Node {
 
 // DescendantsOfKind returns all descendants (depth-first) with the given kind.
 func (n Node) DescendantsOfKind(kind Kind) []Node {
+	n.check()
 	var out []Node
 	var walk func(an *ast.Node)
 	walk = func(an *ast.Node) {
 		for c := range an.IterChildren() {
 			if c.Kind == kind {
-				out = append(out, Node{node: c, sf: n.sf})
+				out = append(out, Node{node: c, sf: n.sf, gen: n.gen})
 			}
 			walk(c)
 		}
@@ -146,8 +181,9 @@ func (n Node) FirstDescendantByKind(kind Kind) (Node, bool) {
 		}
 		return false
 	}
+	n.check()
 	if walk(n.node) {
-		return Node{node: found, sf: n.sf}, true
+		return Node{node: found, sf: n.sf, gen: n.gen}, true
 	}
 	return Node{}, false
 }
@@ -155,8 +191,9 @@ func (n Node) FirstDescendantByKind(kind Kind) (Node, bool) {
 // FirstAncestorByKind returns the closest ancestor with the given kind,
 // or false.
 func (n Node) FirstAncestorByKind(kind Kind) (Node, bool) {
+	n.check()
 	if a := ast.FindAncestorKind(n.node, kind); a != nil {
-		return Node{node: a, sf: n.sf}, true
+		return Node{node: a, sf: n.sf, gen: n.gen}, true
 	}
 	return Node{}, false
 }
@@ -167,7 +204,7 @@ func (n Node) nameNode() (Node, bool) {
 	if name == nil {
 		return Node{}, false
 	}
-	return Node{node: name, sf: n.sf}, true
+	return Node{node: name, sf: n.sf, gen: n.gen}, true
 }
 
 // Name returns the text of the node's name, or "" if it has none.
@@ -281,6 +318,14 @@ func (n Node) AsImportDeclaration() (ImportDeclaration, bool) {
 	return ImportDeclaration{Node: n}, true
 }
 
+// AsConstructorDeclaration downcasts the node, or returns false.
+func (n Node) AsConstructorDeclaration() (ConstructorDeclaration, bool) {
+	if n.Kind() != ast.KindConstructor {
+		return ConstructorDeclaration{}, false
+	}
+	return ConstructorDeclaration{Node: n}, true
+}
+
 // AsExportDeclaration downcasts the node, or returns false.
 func (n Node) AsExportDeclaration() (ExportDeclaration, bool) {
 	if !n.IsExportDeclaration() {
@@ -291,5 +336,5 @@ func (n Node) AsExportDeclaration() (ExportDeclaration, bool) {
 
 // lineOf returns the 0-based line of a byte offset within the file.
 func (n Node) lineOf(pos int) int {
-	return scanner.GetECMALineOfPosition(n.sf.file, pos)
+	return scanner.GetECMALineOfPosition(n.sf.astFile(), pos)
 }

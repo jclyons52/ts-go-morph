@@ -51,7 +51,7 @@ func (d Diagnostic) LineAndColumn() (line, column int, ok bool) {
 	if d.file == nil {
 		return 0, 0, false
 	}
-	l, off := scanner.GetECMALineAndByteOffsetOfPosition(d.file.file, d.start)
+	l, off := scanner.GetECMALineAndByteOffsetOfPosition(d.file.astFile(), d.start)
 	return l + 1, off + 1, true
 }
 
@@ -85,7 +85,7 @@ func (p *Project) PreEmitDiagnostics() []Diagnostic {
 				end:      -1,
 			}
 			if f := d.File(); f != nil && !isLibFile(f.FileName()) {
-				diag.file = &SourceFile{project: p, file: f}
+				diag.file = &SourceFile{project: p, path: f.FileName()}
 				diag.start = d.Pos()
 				diag.end = d.End()
 			}
