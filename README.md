@@ -57,7 +57,7 @@ after edits.
 | Pretty-printing (`Node.Print`) | ✅ experimental |
 | Cross-file rename / find references | ❌ (needs typescript-go's language service) |
 | Code fixes, refactors, completions, formatting | ❌ (same) |
-| Every AST node kind (TS has 300+) | ❌ (~15 most-used declaration kinds wrapped) |
+| Every AST node kind (TS has 300+) | ✅ (~140 node kinds: `Is*`/`As*` + generic accessors; JSDoc kinds deferred) |
 
 ## Known limitations
 
@@ -91,3 +91,10 @@ Manipulation behaviour is covered by golden-file tests under
 To upgrade the vendored compiler: put a new commit hash in
 `third_party/TSGO_COMMIT`, run `tools/update-tsgo.sh`, then `go mod tidy`,
 fix any API breakage, and run the tests.
+
+The node-kind wrappers in `kinds_generated.go` are generated from the vendored
+compiler's `ast` package. Regenerate after upgrading the compiler:
+
+```sh
+go run tools/genkinds/main.go
+```

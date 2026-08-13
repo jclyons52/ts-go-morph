@@ -159,6 +159,48 @@ func (s *SourceFile) ExportDeclarations() []ExportDeclaration {
 	return out
 }
 
+// ModuleDeclarations returns the top-level `namespace`/`module` declarations.
+func (s *SourceFile) ModuleDeclarations() []ModuleDeclaration {
+	var out []ModuleDeclaration
+	for _, n := range s.topLevel(ast.KindModuleDeclaration) {
+		m, _ := n.AsModuleDeclaration()
+		out = append(out, m)
+	}
+	return out
+}
+
+// ModuleDeclaration returns the top-level namespace with the given name, or
+// false.
+func (s *SourceFile) ModuleDeclaration(name string) (ModuleDeclaration, bool) {
+	for _, m := range s.ModuleDeclarations() {
+		if m.Name() == name {
+			return m, true
+		}
+	}
+	return ModuleDeclaration{}, false
+}
+
+// ImportEqualsDeclarations returns the top-level `import x = ...` declarations.
+func (s *SourceFile) ImportEqualsDeclarations() []ImportEqualsDeclaration {
+	var out []ImportEqualsDeclaration
+	for _, n := range s.topLevel(ast.KindImportEqualsDeclaration) {
+		i, _ := n.AsImportEqualsDeclaration()
+		out = append(out, i)
+	}
+	return out
+}
+
+// ExportAssignments returns the top-level `export =`/`export default expr`
+// assignments.
+func (s *SourceFile) ExportAssignments() []ExportAssignment {
+	var out []ExportAssignment
+	for _, n := range s.topLevel(ast.KindExportAssignment) {
+		e, _ := n.AsExportAssignment()
+		out = append(out, e)
+	}
+	return out
+}
+
 // DescendantsOfKind returns all descendants of the file with the given kind.
 func (s *SourceFile) DescendantsOfKind(kind Kind) []Node {
 	return s.RootNode().DescendantsOfKind(kind)

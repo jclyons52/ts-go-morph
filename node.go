@@ -422,16 +422,6 @@ func (n Node) IsJsxAttribute() bool { return n.node.Kind == ast.KindJsxAttribute
 // IsJsxElement reports whether the node is a JSX element (opening+closing).
 func (n Node) IsJsxElement() bool { return n.node.Kind == ast.KindJsxElement }
 
-// IsJsxSelfClosingElement reports whether the node is a self-closing JSX
-// element (`<Foo/>`).
-func (n Node) IsJsxSelfClosingElement() bool { return n.node.Kind == ast.KindJsxSelfClosingElement }
-
-// IsJsxExpression reports whether the node is a JSX expression (`{ ... }`).
-func (n Node) IsJsxExpression() bool { return n.node.Kind == ast.KindJsxExpression }
-
-// IsJsxFragment reports whether the node is a JSX fragment (`<>...</>`).
-func (n Node) IsJsxFragment() bool { return n.node.Kind == ast.KindJsxFragment }
-
 // AsCallExpression downcasts the node, or returns false.
 func (n Node) AsCallExpression() (CallExpression, bool) {
 	n.check()
@@ -539,22 +529,13 @@ func (n Node) LiteralValue() string {
 // JSX expression node, or returns false. For a call `f(a)`, this is `f`.
 func (n Node) GetExpression() (Node, bool) {
 	n.check()
-	if expr := n.node.Expression(); expr != nil {
-		return n.derive(expr)
-	}
-	return Node{}, false
+	return n.child(n.node.Expression)
 }
 
 // GetArguments returns the arguments of a call expression, or nil.
 func (n Node) GetArguments() []Node {
 	n.check()
-	var out []Node
-	for _, a := range n.node.Arguments() {
-		if w, ok := n.derive(a); ok {
-			out = append(out, w)
-		}
-	}
-	return out
+	return n.children(n.node.Arguments)
 }
 
 // GetNameNode returns the name node (for attributes, property access, etc.),
@@ -589,13 +570,7 @@ func (n Node) GetBody() (Node, bool) {
 // GetStatements returns the statements of a block or source file, or nil.
 func (n Node) GetStatements() []Node {
 	n.check()
-	var out []Node
-	for _, s := range n.node.Statements() {
-		if w, ok := n.derive(s); ok {
-			out = append(out, w)
-		}
-	}
-	return out
+	return n.children(n.node.Statements)
 }
 
 // GetJsxChildren returns the children of a JSX element or fragment, or nil.
@@ -615,4 +590,141 @@ func (n Node) GetJsxChildren() []Node {
 // lineOf returns the 0-based line of a byte offset within the file.
 func (n Node) lineOf(pos int) int {
 	return scanner.GetECMALineOfPosition(n.sf.astFile(), pos)
+}
+
+// wrapNodes wraps a slice of AST child nodes, skipping nil entries.
+func (n Node) wrapNodes(nodes []*ast.Node) []Node {
+	var out []Node
+	for _, c := range nodes {
+		if c == nil {
+			continue
+		}
+		out = append(out, Node{node: c, sf: n.sf, gen: n.gen})
+	}
+	return out
+}
+
+// child invokes f, which extracts a child node, and wraps the result. The
+// vendored compiler panics when a node kind does not support the requested
+// child; that panic is translated into a false result so accessors are safe to
+// call on any node.
+func (n Node) child(f func() *ast.Node) (Node, bool) {
+	defer func() { _ = recover() }()
+	if c := f(); c != nil {
+		return n.derive(c)
+	}
+	return Node{}, false
+}
+
+// children invokes f, which extracts a child-node list, and wraps the result,
+// translating the vendored compiler's kind-mismatch panic into nil.
+func (n Node) children(f func() []*ast.Node) []Node {
+	defer func() { _ = recover() }()
+	return n.wrapNodes(f())
+}
+
+// GetType returns the declared type node (for typed declarations, parameters,
+// and type-annotated expressions), or false when there is none.
+func (n Node) GetType() (Node, bool) {
+	n.check()
+	return n.child(n.node.Type)
+}
+
+// GetTypeArguments returns the type arguments of a call/new expression or type
+// reference, or nil.
+func (n Node) GetTypeArguments() []Node {
+	n.check()
+	return n.children(n.node.TypeArguments)
+}
+
+// GetTypeParameters returns the type parameters of a declaration, or nil.
+func (n Node) GetTypeParameters() []Node {
+	n.check()
+	return n.children(n.node.TypeParameters)
+}
+
+// GetMembers returns the members of a class, interface, enum, or type literal,
+// or nil.
+func (n Node) GetMembers() []Node {
+	n.check()
+	return n.children(n.node.Members)
+}
+
+// GetProperties returns the properties of an object literal or type literal,
+// or nil.
+func (n Node) GetProperties() []Node {
+	n.check()
+	return n.children(n.node.Properties)
+}
+
+// GetElements returns the elements of an array literal, or nil.
+func (n Node) GetElements() []Node {
+	n.check()
+	return n.children(n.node.Elements)
+}
+
+// GetDecorators returns the decorators of a node, or nil.
+func (n Node) GetDecorators() []Node {
+	n.check()
+	return n.children(n.node.Decorators)
+}
+
+// GetModifierNodes returns the modifier nodes of a node, or nil.
+func (n Node) GetModifierNodes() []Node {
+	n.check()
+	return n.children(n.node.ModifierNodes)
+}
+
+// GetTagName returns the tag name of a JSX element or JSDoc tag, or false.
+func (n Node) GetTagName() (Node, bool) {
+	n.check()
+	return n.child(n.node.TagName)
+}
+
+// GetLabel returns the label of a labeled statement, or false.
+func (n Node) GetLabel() (Node, bool) {
+	n.check()
+	return n.child(n.node.Label)
+}
+
+// GetAttributes returns the import attributes (or assertions) node, or false.
+func (n Node) GetAttributes() (Node, bool) {
+	n.check()
+	return n.child(n.node.Attributes)
+}
+
+// GetStatement returns the single embedded statement of a control-flow node
+// (if/for/while/do/with/labeled), or false.
+func (n Node) GetStatement() (Node, bool) {
+	n.check()
+	return n.child(n.node.Statement)
+}
+
+// GetPostfixToken returns the postfix operator token (`++`, `--`, `!`), or
+// false.
+func (n Node) GetPostfixToken() (Node, bool) {
+	n.check()
+	return n.child(n.node.PostfixToken)
+}
+
+// GetTypeExpression returns the type expression of a type assertion, satisfies,
+// or typeof node, or false.
+func (n Node) GetTypeExpression() (Node, bool) {
+	n.check()
+	return n.child(n.node.TypeExpression)
+}
+
+// HasQuestionToken reports whether the node carries a `?` token (optional
+// property/parameter/method, conditional, etc.).
+func (n Node) HasQuestionToken() bool {
+	n.check()
+	return n.node.QuestionToken() != nil
+}
+
+// HasQuestionDotToken reports whether the node carries a `?.` optional-chaining
+// token.
+func (n Node) HasQuestionDotToken() bool {
+	n.check()
+	_, ok := n.child(n.node.QuestionDotToken)
+	return ok
 }
