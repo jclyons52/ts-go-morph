@@ -57,7 +57,7 @@ after edits.
 | Pretty-printing (`Node.Print`) | ✅ experimental |
 | Cross-file rename / find references | ❌ (needs typescript-go's language service) |
 | Code fixes, refactors, completions, formatting | ❌ (same) |
-| Every AST node kind (TS has 300+) | ✅ (~140 node kinds: `Is*`/`As*` + generic accessors; JSDoc kinds deferred) |
+| Every AST node kind (TS has 300+) | ✅ (~150 node kinds: `Is*`/`As*` + generic accessors, incl. JSDoc tags, type nodes, and `Node.GetJsDocs`) |
 
 ## Known limitations
 

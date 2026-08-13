@@ -711,6 +711,516 @@ func (n Node) AsIntersectionTypeNode() (IntersectionTypeNode, bool) {
 	return IntersectionTypeNode{Node: n}, true
 }
 
+// JSDoc wraps a JSDoc node.
+type JSDoc struct{ Node }
+
+// IsJSDoc reports whether the node is a JSDoc.
+func (n Node) IsJSDoc() bool { return ast.IsJSDoc(n.node) }
+
+// AsJSDoc downcasts the node, or returns false.
+func (n Node) AsJSDoc() (JSDoc, bool) {
+	n.check()
+	if !n.IsJSDoc() {
+		return JSDoc{}, false
+	}
+	return JSDoc{Node: n}, true
+}
+
+// JSDocAllType wraps a JSDocAllType node.
+type JSDocAllType struct{ Node }
+
+// IsJSDocAllType reports whether the node is a JSDocAllType.
+func (n Node) IsJSDocAllType() bool { return ast.IsJSDocAllType(n.node) }
+
+// AsJSDocAllType downcasts the node, or returns false.
+func (n Node) AsJSDocAllType() (JSDocAllType, bool) {
+	n.check()
+	if !n.IsJSDocAllType() {
+		return JSDocAllType{}, false
+	}
+	return JSDocAllType{Node: n}, true
+}
+
+// JSDocAugmentsTag wraps a JSDocAugmentsTag node.
+type JSDocAugmentsTag struct{ JSDocTag }
+
+// IsJSDocAugmentsTag reports whether the node is a JSDocAugmentsTag.
+func (n Node) IsJSDocAugmentsTag() bool { return ast.IsJSDocAugmentsTag(n.node) }
+
+// AsJSDocAugmentsTag downcasts the node, or returns false.
+func (n Node) AsJSDocAugmentsTag() (JSDocAugmentsTag, bool) {
+	n.check()
+	if !n.IsJSDocAugmentsTag() {
+		return JSDocAugmentsTag{}, false
+	}
+	return JSDocAugmentsTag{JSDocTag: JSDocTag{Node: n}}, true
+}
+
+// JSDocCallbackTag wraps a JSDocCallbackTag node.
+type JSDocCallbackTag struct{ JSDocTag }
+
+// IsJSDocCallbackTag reports whether the node is a JSDocCallbackTag.
+func (n Node) IsJSDocCallbackTag() bool { return ast.IsJSDocCallbackTag(n.node) }
+
+// AsJSDocCallbackTag downcasts the node, or returns false.
+func (n Node) AsJSDocCallbackTag() (JSDocCallbackTag, bool) {
+	n.check()
+	if !n.IsJSDocCallbackTag() {
+		return JSDocCallbackTag{}, false
+	}
+	return JSDocCallbackTag{JSDocTag: JSDocTag{Node: n}}, true
+}
+
+// JSDocDeprecatedTag wraps a JSDocDeprecatedTag node.
+type JSDocDeprecatedTag struct{ JSDocTag }
+
+// IsJSDocDeprecatedTag reports whether the node is a JSDocDeprecatedTag.
+func (n Node) IsJSDocDeprecatedTag() bool { return ast.IsJSDocDeprecatedTag(n.node) }
+
+// AsJSDocDeprecatedTag downcasts the node, or returns false.
+func (n Node) AsJSDocDeprecatedTag() (JSDocDeprecatedTag, bool) {
+	n.check()
+	if !n.IsJSDocDeprecatedTag() {
+		return JSDocDeprecatedTag{}, false
+	}
+	return JSDocDeprecatedTag{JSDocTag: JSDocTag{Node: n}}, true
+}
+
+// JSDocImplementsTag wraps a JSDocImplementsTag node.
+type JSDocImplementsTag struct{ JSDocTag }
+
+// IsJSDocImplementsTag reports whether the node is a JSDocImplementsTag.
+func (n Node) IsJSDocImplementsTag() bool { return ast.IsJSDocImplementsTag(n.node) }
+
+// AsJSDocImplementsTag downcasts the node, or returns false.
+func (n Node) AsJSDocImplementsTag() (JSDocImplementsTag, bool) {
+	n.check()
+	if !n.IsJSDocImplementsTag() {
+		return JSDocImplementsTag{}, false
+	}
+	return JSDocImplementsTag{JSDocTag: JSDocTag{Node: n}}, true
+}
+
+// JSDocImportTag wraps a JSDocImportTag node.
+type JSDocImportTag struct{ JSDocTag }
+
+// IsJSDocImportTag reports whether the node is a JSDocImportTag.
+func (n Node) IsJSDocImportTag() bool { return ast.IsJSDocImportTag(n.node) }
+
+// AsJSDocImportTag downcasts the node, or returns false.
+func (n Node) AsJSDocImportTag() (JSDocImportTag, bool) {
+	n.check()
+	if !n.IsJSDocImportTag() {
+		return JSDocImportTag{}, false
+	}
+	return JSDocImportTag{JSDocTag: JSDocTag{Node: n}}, true
+}
+
+// JSDocLink wraps a JSDocLink node.
+type JSDocLink struct{ Node }
+
+// IsJSDocLink reports whether the node is a JSDocLink.
+func (n Node) IsJSDocLink() bool { return ast.IsJSDocLink(n.node) }
+
+// AsJSDocLink downcasts the node, or returns false.
+func (n Node) AsJSDocLink() (JSDocLink, bool) {
+	n.check()
+	if !n.IsJSDocLink() {
+		return JSDocLink{}, false
+	}
+	return JSDocLink{Node: n}, true
+}
+
+// JSDocLinkCode wraps a JSDocLinkCode node.
+type JSDocLinkCode struct{ Node }
+
+// IsJSDocLinkCode reports whether the node is a JSDocLinkCode.
+func (n Node) IsJSDocLinkCode() bool { return ast.IsJSDocLinkCode(n.node) }
+
+// AsJSDocLinkCode downcasts the node, or returns false.
+func (n Node) AsJSDocLinkCode() (JSDocLinkCode, bool) {
+	n.check()
+	if !n.IsJSDocLinkCode() {
+		return JSDocLinkCode{}, false
+	}
+	return JSDocLinkCode{Node: n}, true
+}
+
+// JSDocLinkPlain wraps a JSDocLinkPlain node.
+type JSDocLinkPlain struct{ Node }
+
+// IsJSDocLinkPlain reports whether the node is a JSDocLinkPlain.
+func (n Node) IsJSDocLinkPlain() bool { return ast.IsJSDocLinkPlain(n.node) }
+
+// AsJSDocLinkPlain downcasts the node, or returns false.
+func (n Node) AsJSDocLinkPlain() (JSDocLinkPlain, bool) {
+	n.check()
+	if !n.IsJSDocLinkPlain() {
+		return JSDocLinkPlain{}, false
+	}
+	return JSDocLinkPlain{Node: n}, true
+}
+
+// JSDocNameReference wraps a JSDocNameReference node.
+type JSDocNameReference struct{ Node }
+
+// IsJSDocNameReference reports whether the node is a JSDocNameReference.
+func (n Node) IsJSDocNameReference() bool { return ast.IsJSDocNameReference(n.node) }
+
+// AsJSDocNameReference downcasts the node, or returns false.
+func (n Node) AsJSDocNameReference() (JSDocNameReference, bool) {
+	n.check()
+	if !n.IsJSDocNameReference() {
+		return JSDocNameReference{}, false
+	}
+	return JSDocNameReference{Node: n}, true
+}
+
+// JSDocNonNullableType wraps a JSDocNonNullableType node.
+type JSDocNonNullableType struct{ Node }
+
+// IsJSDocNonNullableType reports whether the node is a JSDocNonNullableType.
+func (n Node) IsJSDocNonNullableType() bool { return ast.IsJSDocNonNullableType(n.node) }
+
+// AsJSDocNonNullableType downcasts the node, or returns false.
+func (n Node) AsJSDocNonNullableType() (JSDocNonNullableType, bool) {
+	n.check()
+	if !n.IsJSDocNonNullableType() {
+		return JSDocNonNullableType{}, false
+	}
+	return JSDocNonNullableType{Node: n}, true
+}
+
+// JSDocNullableType wraps a JSDocNullableType node.
+type JSDocNullableType struct{ Node }
+
+// IsJSDocNullableType reports whether the node is a JSDocNullableType.
+func (n Node) IsJSDocNullableType() bool { return ast.IsJSDocNullableType(n.node) }
+
+// AsJSDocNullableType downcasts the node, or returns false.
+func (n Node) AsJSDocNullableType() (JSDocNullableType, bool) {
+	n.check()
+	if !n.IsJSDocNullableType() {
+		return JSDocNullableType{}, false
+	}
+	return JSDocNullableType{Node: n}, true
+}
+
+// JSDocOptionalType wraps a JSDocOptionalType node.
+type JSDocOptionalType struct{ Node }
+
+// IsJSDocOptionalType reports whether the node is a JSDocOptionalType.
+func (n Node) IsJSDocOptionalType() bool { return ast.IsJSDocOptionalType(n.node) }
+
+// AsJSDocOptionalType downcasts the node, or returns false.
+func (n Node) AsJSDocOptionalType() (JSDocOptionalType, bool) {
+	n.check()
+	if !n.IsJSDocOptionalType() {
+		return JSDocOptionalType{}, false
+	}
+	return JSDocOptionalType{Node: n}, true
+}
+
+// JSDocOverloadTag wraps a JSDocOverloadTag node.
+type JSDocOverloadTag struct{ JSDocTag }
+
+// IsJSDocOverloadTag reports whether the node is a JSDocOverloadTag.
+func (n Node) IsJSDocOverloadTag() bool { return ast.IsJSDocOverloadTag(n.node) }
+
+// AsJSDocOverloadTag downcasts the node, or returns false.
+func (n Node) AsJSDocOverloadTag() (JSDocOverloadTag, bool) {
+	n.check()
+	if !n.IsJSDocOverloadTag() {
+		return JSDocOverloadTag{}, false
+	}
+	return JSDocOverloadTag{JSDocTag: JSDocTag{Node: n}}, true
+}
+
+// JSDocOverrideTag wraps a JSDocOverrideTag node.
+type JSDocOverrideTag struct{ JSDocTag }
+
+// IsJSDocOverrideTag reports whether the node is a JSDocOverrideTag.
+func (n Node) IsJSDocOverrideTag() bool { return ast.IsJSDocOverrideTag(n.node) }
+
+// AsJSDocOverrideTag downcasts the node, or returns false.
+func (n Node) AsJSDocOverrideTag() (JSDocOverrideTag, bool) {
+	n.check()
+	if !n.IsJSDocOverrideTag() {
+		return JSDocOverrideTag{}, false
+	}
+	return JSDocOverrideTag{JSDocTag: JSDocTag{Node: n}}, true
+}
+
+// JSDocPrivateTag wraps a JSDocPrivateTag node.
+type JSDocPrivateTag struct{ JSDocTag }
+
+// IsJSDocPrivateTag reports whether the node is a JSDocPrivateTag.
+func (n Node) IsJSDocPrivateTag() bool { return ast.IsJSDocPrivateTag(n.node) }
+
+// AsJSDocPrivateTag downcasts the node, or returns false.
+func (n Node) AsJSDocPrivateTag() (JSDocPrivateTag, bool) {
+	n.check()
+	if !n.IsJSDocPrivateTag() {
+		return JSDocPrivateTag{}, false
+	}
+	return JSDocPrivateTag{JSDocTag: JSDocTag{Node: n}}, true
+}
+
+// JSDocProtectedTag wraps a JSDocProtectedTag node.
+type JSDocProtectedTag struct{ JSDocTag }
+
+// IsJSDocProtectedTag reports whether the node is a JSDocProtectedTag.
+func (n Node) IsJSDocProtectedTag() bool { return ast.IsJSDocProtectedTag(n.node) }
+
+// AsJSDocProtectedTag downcasts the node, or returns false.
+func (n Node) AsJSDocProtectedTag() (JSDocProtectedTag, bool) {
+	n.check()
+	if !n.IsJSDocProtectedTag() {
+		return JSDocProtectedTag{}, false
+	}
+	return JSDocProtectedTag{JSDocTag: JSDocTag{Node: n}}, true
+}
+
+// JSDocPublicTag wraps a JSDocPublicTag node.
+type JSDocPublicTag struct{ JSDocTag }
+
+// IsJSDocPublicTag reports whether the node is a JSDocPublicTag.
+func (n Node) IsJSDocPublicTag() bool { return ast.IsJSDocPublicTag(n.node) }
+
+// AsJSDocPublicTag downcasts the node, or returns false.
+func (n Node) AsJSDocPublicTag() (JSDocPublicTag, bool) {
+	n.check()
+	if !n.IsJSDocPublicTag() {
+		return JSDocPublicTag{}, false
+	}
+	return JSDocPublicTag{JSDocTag: JSDocTag{Node: n}}, true
+}
+
+// JSDocReadonlyTag wraps a JSDocReadonlyTag node.
+type JSDocReadonlyTag struct{ JSDocTag }
+
+// IsJSDocReadonlyTag reports whether the node is a JSDocReadonlyTag.
+func (n Node) IsJSDocReadonlyTag() bool { return ast.IsJSDocReadonlyTag(n.node) }
+
+// AsJSDocReadonlyTag downcasts the node, or returns false.
+func (n Node) AsJSDocReadonlyTag() (JSDocReadonlyTag, bool) {
+	n.check()
+	if !n.IsJSDocReadonlyTag() {
+		return JSDocReadonlyTag{}, false
+	}
+	return JSDocReadonlyTag{JSDocTag: JSDocTag{Node: n}}, true
+}
+
+// JSDocReturnTag wraps a JSDocReturnTag node.
+type JSDocReturnTag struct{ JSDocTag }
+
+// IsJSDocReturnTag reports whether the node is a JSDocReturnTag.
+func (n Node) IsJSDocReturnTag() bool { return ast.IsJSDocReturnTag(n.node) }
+
+// AsJSDocReturnTag downcasts the node, or returns false.
+func (n Node) AsJSDocReturnTag() (JSDocReturnTag, bool) {
+	n.check()
+	if !n.IsJSDocReturnTag() {
+		return JSDocReturnTag{}, false
+	}
+	return JSDocReturnTag{JSDocTag: JSDocTag{Node: n}}, true
+}
+
+// JSDocSatisfiesTag wraps a JSDocSatisfiesTag node.
+type JSDocSatisfiesTag struct{ JSDocTag }
+
+// IsJSDocSatisfiesTag reports whether the node is a JSDocSatisfiesTag.
+func (n Node) IsJSDocSatisfiesTag() bool { return ast.IsJSDocSatisfiesTag(n.node) }
+
+// AsJSDocSatisfiesTag downcasts the node, or returns false.
+func (n Node) AsJSDocSatisfiesTag() (JSDocSatisfiesTag, bool) {
+	n.check()
+	if !n.IsJSDocSatisfiesTag() {
+		return JSDocSatisfiesTag{}, false
+	}
+	return JSDocSatisfiesTag{JSDocTag: JSDocTag{Node: n}}, true
+}
+
+// JSDocSeeTag wraps a JSDocSeeTag node.
+type JSDocSeeTag struct{ JSDocTag }
+
+// IsJSDocSeeTag reports whether the node is a JSDocSeeTag.
+func (n Node) IsJSDocSeeTag() bool { return ast.IsJSDocSeeTag(n.node) }
+
+// AsJSDocSeeTag downcasts the node, or returns false.
+func (n Node) AsJSDocSeeTag() (JSDocSeeTag, bool) {
+	n.check()
+	if !n.IsJSDocSeeTag() {
+		return JSDocSeeTag{}, false
+	}
+	return JSDocSeeTag{JSDocTag: JSDocTag{Node: n}}, true
+}
+
+// JSDocSignature wraps a JSDocSignature node.
+type JSDocSignature struct{ Node }
+
+// IsJSDocSignature reports whether the node is a JSDocSignature.
+func (n Node) IsJSDocSignature() bool { return ast.IsJSDocSignature(n.node) }
+
+// AsJSDocSignature downcasts the node, or returns false.
+func (n Node) AsJSDocSignature() (JSDocSignature, bool) {
+	n.check()
+	if !n.IsJSDocSignature() {
+		return JSDocSignature{}, false
+	}
+	return JSDocSignature{Node: n}, true
+}
+
+// JSDocTemplateTag wraps a JSDocTemplateTag node.
+type JSDocTemplateTag struct{ JSDocTag }
+
+// IsJSDocTemplateTag reports whether the node is a JSDocTemplateTag.
+func (n Node) IsJSDocTemplateTag() bool { return ast.IsJSDocTemplateTag(n.node) }
+
+// AsJSDocTemplateTag downcasts the node, or returns false.
+func (n Node) AsJSDocTemplateTag() (JSDocTemplateTag, bool) {
+	n.check()
+	if !n.IsJSDocTemplateTag() {
+		return JSDocTemplateTag{}, false
+	}
+	return JSDocTemplateTag{JSDocTag: JSDocTag{Node: n}}, true
+}
+
+// JSDocText wraps a JSDocText node.
+type JSDocText struct{ Node }
+
+// IsJSDocText reports whether the node is a JSDocText.
+func (n Node) IsJSDocText() bool { return ast.IsJSDocText(n.node) }
+
+// AsJSDocText downcasts the node, or returns false.
+func (n Node) AsJSDocText() (JSDocText, bool) {
+	n.check()
+	if !n.IsJSDocText() {
+		return JSDocText{}, false
+	}
+	return JSDocText{Node: n}, true
+}
+
+// JSDocThisTag wraps a JSDocThisTag node.
+type JSDocThisTag struct{ JSDocTag }
+
+// IsJSDocThisTag reports whether the node is a JSDocThisTag.
+func (n Node) IsJSDocThisTag() bool { return ast.IsJSDocThisTag(n.node) }
+
+// AsJSDocThisTag downcasts the node, or returns false.
+func (n Node) AsJSDocThisTag() (JSDocThisTag, bool) {
+	n.check()
+	if !n.IsJSDocThisTag() {
+		return JSDocThisTag{}, false
+	}
+	return JSDocThisTag{JSDocTag: JSDocTag{Node: n}}, true
+}
+
+// JSDocThrowsTag wraps a JSDocThrowsTag node.
+type JSDocThrowsTag struct{ JSDocTag }
+
+// IsJSDocThrowsTag reports whether the node is a JSDocThrowsTag.
+func (n Node) IsJSDocThrowsTag() bool { return ast.IsJSDocThrowsTag(n.node) }
+
+// AsJSDocThrowsTag downcasts the node, or returns false.
+func (n Node) AsJSDocThrowsTag() (JSDocThrowsTag, bool) {
+	n.check()
+	if !n.IsJSDocThrowsTag() {
+		return JSDocThrowsTag{}, false
+	}
+	return JSDocThrowsTag{JSDocTag: JSDocTag{Node: n}}, true
+}
+
+// JSDocTypeExpression wraps a JSDocTypeExpression node.
+type JSDocTypeExpression struct{ Node }
+
+// IsJSDocTypeExpression reports whether the node is a JSDocTypeExpression.
+func (n Node) IsJSDocTypeExpression() bool { return ast.IsJSDocTypeExpression(n.node) }
+
+// AsJSDocTypeExpression downcasts the node, or returns false.
+func (n Node) AsJSDocTypeExpression() (JSDocTypeExpression, bool) {
+	n.check()
+	if !n.IsJSDocTypeExpression() {
+		return JSDocTypeExpression{}, false
+	}
+	return JSDocTypeExpression{Node: n}, true
+}
+
+// JSDocTypeLiteral wraps a JSDocTypeLiteral node.
+type JSDocTypeLiteral struct{ Node }
+
+// IsJSDocTypeLiteral reports whether the node is a JSDocTypeLiteral.
+func (n Node) IsJSDocTypeLiteral() bool { return ast.IsJSDocTypeLiteral(n.node) }
+
+// AsJSDocTypeLiteral downcasts the node, or returns false.
+func (n Node) AsJSDocTypeLiteral() (JSDocTypeLiteral, bool) {
+	n.check()
+	if !n.IsJSDocTypeLiteral() {
+		return JSDocTypeLiteral{}, false
+	}
+	return JSDocTypeLiteral{Node: n}, true
+}
+
+// JSDocTypeTag wraps a JSDocTypeTag node.
+type JSDocTypeTag struct{ JSDocTag }
+
+// IsJSDocTypeTag reports whether the node is a JSDocTypeTag.
+func (n Node) IsJSDocTypeTag() bool { return ast.IsJSDocTypeTag(n.node) }
+
+// AsJSDocTypeTag downcasts the node, or returns false.
+func (n Node) AsJSDocTypeTag() (JSDocTypeTag, bool) {
+	n.check()
+	if !n.IsJSDocTypeTag() {
+		return JSDocTypeTag{}, false
+	}
+	return JSDocTypeTag{JSDocTag: JSDocTag{Node: n}}, true
+}
+
+// JSDocTypedefTag wraps a JSDocTypedefTag node.
+type JSDocTypedefTag struct{ JSDocTag }
+
+// IsJSDocTypedefTag reports whether the node is a JSDocTypedefTag.
+func (n Node) IsJSDocTypedefTag() bool { return ast.IsJSDocTypedefTag(n.node) }
+
+// AsJSDocTypedefTag downcasts the node, or returns false.
+func (n Node) AsJSDocTypedefTag() (JSDocTypedefTag, bool) {
+	n.check()
+	if !n.IsJSDocTypedefTag() {
+		return JSDocTypedefTag{}, false
+	}
+	return JSDocTypedefTag{JSDocTag: JSDocTag{Node: n}}, true
+}
+
+// JSDocUnknownTag wraps a JSDocUnknownTag node.
+type JSDocUnknownTag struct{ JSDocTag }
+
+// IsJSDocUnknownTag reports whether the node is a JSDocUnknownTag.
+func (n Node) IsJSDocUnknownTag() bool { return ast.IsJSDocUnknownTag(n.node) }
+
+// AsJSDocUnknownTag downcasts the node, or returns false.
+func (n Node) AsJSDocUnknownTag() (JSDocUnknownTag, bool) {
+	n.check()
+	if !n.IsJSDocUnknownTag() {
+		return JSDocUnknownTag{}, false
+	}
+	return JSDocUnknownTag{JSDocTag: JSDocTag{Node: n}}, true
+}
+
+// JSDocVariadicType wraps a JSDocVariadicType node.
+type JSDocVariadicType struct{ Node }
+
+// IsJSDocVariadicType reports whether the node is a JSDocVariadicType.
+func (n Node) IsJSDocVariadicType() bool { return ast.IsJSDocVariadicType(n.node) }
+
+// AsJSDocVariadicType downcasts the node, or returns false.
+func (n Node) AsJSDocVariadicType() (JSDocVariadicType, bool) {
+	n.check()
+	if !n.IsJSDocVariadicType() {
+		return JSDocVariadicType{}, false
+	}
+	return JSDocVariadicType{Node: n}, true
+}
+
 // JsxAttributes wraps a JsxAttributes node.
 type JsxAttributes struct{ Node }
 

@@ -116,7 +116,7 @@ func main() {
 
 	var names []string
 	for name := range asNames {
-		if alreadyWrapped[name] || excluded[name] || strings.HasPrefix(name, "JSDoc") {
+		if alreadyWrapped[name] || excluded[name] {
 			continue
 		}
 		if !isNames["Is"+name] {
@@ -133,15 +133,23 @@ func main() {
 	b.WriteString("import \"github.com/jclyons52/ts-go-morph/third_party/typescript-go/ts/ast\"\n\n")
 
 	for _, name := range names {
+		embed := "Node"
+		if strings.HasPrefix(name, "JSDoc") && strings.HasSuffix(name, "Tag") {
+			embed = "JSDocTag"
+		}
+		literal := "Node: n"
+		if embed != "Node" {
+			literal = embed + ": " + embed + "{Node: n}"
+		}
 		fmt.Fprintf(&b, "// %s wraps a %s node.\n", name, name)
-		fmt.Fprintf(&b, "type %s struct{ Node }\n\n", name)
+		fmt.Fprintf(&b, "type %s struct{ %s }\n\n", name, embed)
 		fmt.Fprintf(&b, "// Is%s reports whether the node is a %s.\n", name, name)
 		fmt.Fprintf(&b, "func (n Node) Is%s() bool { return ast.Is%s(n.node) }\n\n", name, name)
 		fmt.Fprintf(&b, "// As%s downcasts the node, or returns false.\n", name)
 		fmt.Fprintf(&b, "func (n Node) As%s() (%s, bool) {\n", name, name)
 		fmt.Fprintf(&b, "\tn.check()\n")
 		fmt.Fprintf(&b, "\tif !n.Is%s() {\n\t\treturn %s{}, false\n\t}\n", name, name)
-		fmt.Fprintf(&b, "\treturn %s{Node: n}, true\n}\n\n", name)
+		fmt.Fprintf(&b, "\treturn %s{%s}, true\n}\n\n", name, literal)
 	}
 
 	src, err := format.Source(b.Bytes())

@@ -669,6 +669,13 @@ func (n Node) GetDecorators() []Node {
 	return n.children(n.node.Decorators)
 }
 
+// GetComments returns the comment nodes of a JSDoc comment or JSDoc tag, or
+// nil.
+func (n Node) GetComments() []Node {
+	n.check()
+	return n.children(n.node.Comments)
+}
+
 // GetModifierNodes returns the modifier nodes of a node, or nil.
 func (n Node) GetModifierNodes() []Node {
 	n.check()
