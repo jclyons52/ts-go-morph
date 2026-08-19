@@ -1,0 +1,3 @@
+
+# transient test scratch (regenerated on every `go test`); reference/ is the accepted truth
+testdata/baselines/local/
